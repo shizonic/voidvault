@@ -3,9 +3,9 @@ Voidvault
 
 Last tested | ISO                                                             | Result
 ----------- | --------------------------------------------------------------- | ------
-2018-12-01  | [void-live-x86_64-20181111.iso][void-live-iso-x86_64-glibc]     | PASS
-2018-12-01  | [void-live-x86_64-musl-20181111.iso][void-live-iso-x86_64-musl] | PASS
-2018-12-01  | [void-live-i686-20181111.iso][void-live-iso-i686-glibc]         | PASS
+2019-01-12  | [void-live-x86_64-20181111.iso][void-live-iso-x86_64-glibc]     | PASS
+2019-01-12  | [void-live-x86_64-musl-20181111.iso][void-live-iso-x86_64-musl] | FAIL
+2019-01-12  | [void-live-i686-20181111.iso][void-live-iso-i686-glibc]         | PASS
 
 
 Bootstrap Void with FDE
@@ -16,7 +16,7 @@ Description
 
 ### Overview
 
-Voidvault bootstraps Void with whole system Btrfs on LUKS.
+Voidvault bootstraps Void with whole system NILFS+LVM on LUKS.
 
 Voidvault works on Void with Intel or AMD x86 CPU. It assumes you are
 comfortable working on the cmdline, and that you have no need for booting
@@ -27,7 +27,7 @@ could cause catastrophic data loss and system instability.
 
 ### Features
 
-- whole system Btrfs on LUKS, including encrypted `/boot`
+- whole system [NILFS][NILFS]+LVM on LUKS, including encrypted `/boot`
 - [runit][runit] PID 1
 - [GPT][GPT] partitioning
 - no swap partition, uses [zram][zram] via [zramen][zramen]
@@ -68,6 +68,7 @@ could cause catastrophic data loss and system instability.
 - uses mq-deadline I/O scheduler for SSDs, BFQ for HDDs (see:
   [resources/etc/udev/rules.d/60-io-schedulers.rules](resources/etc/udev/rules.d/60-io-schedulers.rules))
 - enables runit service for dnscrypt-proxy, nftables and socklog
+- configures [nilfs_cleanerd][nilfs_cleanerd] to reduce overhead
 - configures [Xorg][Xorg], but does not install any Xorg packages (see:
   [resources/etc/X11](resources/etc/X11))
 - optionally disables IPv6, and makes IPv4-only adjustments to dhcpcd,
@@ -77,27 +78,23 @@ could cause catastrophic data loss and system instability.
 
 - `/dev/sdX1` is the BIOS boot sector (size: 2MB)
 - `/dev/sdX2` is the EFI system partition (size: 100MB)
-- `/dev/sdX3` is the root Btrfs filesystem on LUKS (size: remainder)
+- `/dev/sdX3` is the root NILFS+LVM filesystem on LUKS (size: remainder)
 
-Voidvault creates the following Btrfs subvolumes with a [flat layout][flat
-layout]:
+Voidvault creates the following LVM logical volumes:
 
-Subvolume name       | Mounting point
----                  | ---
-`@`                  | `/`
-`@boot`              | `/boot`
-`@home`              | `/home`
-`@opt`               | `/opt`
-`@srv`               | `/srv`
-`@var`               | `/var`
-`@var-cache-xbps`    | `/var/cache/xbps`
-`@var-log`           | `/var/log`
-`@var-opt`           | `/var/opt`
-`@var-spool`         | `/var/spool`
-`@var-tmp`           | `/var/tmp`
-
-Voidvault [disables Btrfs CoW][disables Btrfs CoW] on `/home`, `/srv`,
-`/var/log`, `/var/spool` and `/var/tmp`.
+Logical Volume name | Mounting point    | LVM Extents
+---                 | ---               | ---
+`root`              | `/`               | `12%VG`
+`boot`              | `/boot`           | `2%VG`
+`opt`               | `/opt`            | `1%VG`
+`srv`               | `/srv`            | `5%VG`
+`var`               | `/var`            | `5%VG`
+`var-cache-xbps`    | `/var/cache/xbps` | `5%VG`
+`var-log`           | `/var/log`        | `1%VG`
+`var-opt`           | `/var/opt`        | `1%VG`
+`var-spool`         | `/var/spool`      | `1%VG`
+`var-tmp`           | `/var/tmp`        | `2%VG`
+`home`              | `/home`           | `100%FREE`
 
 Voidvault mounts directories `/srv`, `/tmp`, `/var/log`, `/var/spool`
 and `/var/tmp` with options `nodev,noexec,nosuid`.
@@ -143,6 +140,7 @@ VOIDVAULT_ROOT_PASS="your root password"
 VOIDVAULT_ROOT_PASS_HASH='$6$rounds=700000$xDn3UJKNvfOxJ1Ds$YEaaBAvQQgVdtV7jFfVnwmh57Do1awMh8vTBtI1higrZMAXUisX2XKuYbdTcxgQMleWZvK3zkSJQ4F3Jyd5Ln1'
 VOIDVAULT_VAULT_NAME="vault"
 VOIDVAULT_VAULT_PASS="your LUKS encrypted volume's password"
+VOIDVAULT_POOL_NAME="vg0"
 VOIDVAULT_HOSTNAME="vault"
 VOIDVAULT_PARTITION="/dev/sdb"
 VOIDVAULT_PROCESSOR="other"
@@ -171,6 +169,7 @@ voidvault --admin-name="live"                                  \
           --root-pass="your root password"                     \
           --vault-name="vault"                                 \
           --vault-pass="your LUKS encrypted volume's password" \
+          --pool-name="vg0"                                    \
           --hostname="vault"                                   \
           --partition="/dev/sdb"                               \
           --processor="other"                                  \
@@ -240,14 +239,6 @@ voidvault ls partitions
 voidvault ls timezones
 ```
 
-### `voidvault disable-cow`
-
-Disable the Copy-on-Write attribute for Btrfs directories.
-
-```sh
-voidvault -r disable-cow dest/
-```
-
 
 Installation
 ------------
@@ -260,7 +251,6 @@ Dependencies
 
 Name                 | Provides                                           | Included in Void ISO¹²?
 ---                  | ---                                                | ---
-btrfs-progs          | Btrfs support                                      | Y
 coreutils            | `chmod`, `chown`, `cp`, `rm`                       | Y
 cryptsetup           | FDE with LUKS                                      | Y
 dosfstools           | create VFAT filesystem for UEFI with `mkfs.vfat`   | Y
@@ -273,7 +263,9 @@ grub                 | FDE on `/boot`, `grub-mkpasswd-pbkdf2`             | Y
 kbd                  | keymap data in `/usr/share/kbd/keymaps`, `setfont` | Y
 kmod                 | `modprobe`                                         | Y
 libressl             | user password salts                                | Y
+lvm2                 | LVM disk partitioning                              | N
 musl³                | libcrypt                                           | Y
+nilfs-utils          | NILFS support                                      | N
 procps-ng            | `pkill`                                            | Y
 rakudo               | `voidvault` Perl 6 runtime                         | N
 tzdata               | timezone data in `/usr/share/zoneinfo/zone.tab`    | Y
@@ -310,6 +302,7 @@ variable values for all configuration options aside from:
 - `--guest-pass`
 - `--hostname`
 - `--ignore-conf-repos`
+- `--pool-name`
 - `--repository`
 - `--root-pass-hash`
 - `--root-pass`
@@ -345,13 +338,13 @@ information, see http://unlicense.org/ or the accompanying UNLICENSE file.
 
 
 [denies console login as root]: https://wiki.archlinux.org/index.php/Security#Denying_console_login_as_root
-[disables Btrfs CoW]: https://wiki.archlinux.org/index.php/Btrfs#Disabling_CoW
 [dnscrypt-proxy]: https://wiki.archlinux.org/index.php/DNSCrypt
-[flat layout]: https://btrfs.wiki.kernel.org/index.php/SysadminGuide#Layout
 [GPT]: https://wiki.archlinux.org/index.php/Partitioning#GUID_Partition_Table
 [GRUB]: https://wiki.archlinux.org/index.php/GRUB
 [hides process information]: https://wiki.archlinux.org/index.php/Security#hidepid
 [nftables]: https://wiki.archlinux.org/index.php/nftables
+[NILFS]: https://nilfs.sourceforge.io/
+[nilfs_cleanerd]: https://news.ycombinator.com/item?id=18753858
 [OpenSSH]: https://wiki.archlinux.org/index.php/Secure_Shell
 [runit]: https://wiki.voidlinux.org/runit
 [Sysctl]: https://wiki.archlinux.org/index.php/Sysctl
