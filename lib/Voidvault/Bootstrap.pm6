@@ -518,8 +518,8 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # opt (C</opt>) sized at 100M
-    my Str:D $size = '100M';
+    # opt (C</opt>) sized at 200M
+    my Str:D $size = '200M';
     lvcreate($lv, :$size, $pool-name);
 }
 
@@ -562,8 +562,8 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-log (C</var/log>) sized at 100M
-    my Str:D $size = '100M';
+    # var-log (C</var/log>) sized at 200M
+    my Str:D $size = '200M';
     lvcreate($lv, :$size, $pool-name);
 }
 
@@ -573,8 +573,8 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-opt (C</var/opt>) sized at 50M
-    my Str:D $size = '50M';
+    # var-opt (C</var/opt>) sized at 200M
+    my Str:D $size = '200M';
     lvcreate($lv, :$size, $pool-name);
 }
 
@@ -584,8 +584,8 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-spool (C</var/spool>) sized at 50M
-    my Str:D $size = '50M';
+    # var-spool (C</var/spool>) sized at 200M
+    my Str:D $size = '200M';
     lvcreate($lv, :$size, $pool-name);
 }
 

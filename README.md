@@ -86,13 +86,13 @@ Logical Volume name | Mounting point    | Sizing
 ---                 | ---               | ---
 `root`              | `/`               | `7G`
 `boot`              | `/boot`           | `700M`
-`opt`               | `/opt`            | `100M`
+`opt`               | `/opt`            | `200M`
 `srv`               | `/srv`            | `200M`
 `var`               | `/var`            | `1G`
 `var-cache-xbps`    | `/var/cache/xbps` | `2G`
-`var-log`           | `/var/log`        | `100M`
-`var-opt`           | `/var/opt`        | `50M`
-`var-spool`         | `/var/spool`      | `50M`
+`var-log`           | `/var/log`        | `200M`
+`var-opt`           | `/var/opt`        | `200M`
+`var-spool`         | `/var/spool`      | `200M`
 `var-tmp`           | `/var/tmp`        | `800M`
 `home`              | `/home`           | `100%FREE`
 
