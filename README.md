@@ -82,18 +82,18 @@ could cause catastrophic data loss and system instability.
 
 Voidvault creates the following LVM logical volumes:
 
-Logical Volume name | Mounting point    | LVM Extents
+Logical Volume name | Mounting point    | Sizing
 ---                 | ---               | ---
-`root`              | `/`               | `12%VG`
-`boot`              | `/boot`           | `2%VG`
-`opt`               | `/opt`            | `1%VG`
-`srv`               | `/srv`            | `5%VG`
-`var`               | `/var`            | `5%VG`
-`var-cache-xbps`    | `/var/cache/xbps` | `5%VG`
-`var-log`           | `/var/log`        | `1%VG`
-`var-opt`           | `/var/opt`        | `1%VG`
-`var-spool`         | `/var/spool`      | `1%VG`
-`var-tmp`           | `/var/tmp`        | `2%VG`
+`root`              | `/`               | `7G`
+`boot`              | `/boot`           | `700M`
+`opt`               | `/opt`            | `100M`
+`srv`               | `/srv`            | `200M`
+`var`               | `/var`            | `1G`
+`var-cache-xbps`    | `/var/cache/xbps` | `2G`
+`var-log`           | `/var/log`        | `100M`
+`var-opt`           | `/var/opt`        | `50M`
+`var-spool`         | `/var/spool`      | `50M`
+`var-tmp`           | `/var/tmp`        | `800M`
 `home`              | `/home`           | `100%FREE`
 
 Voidvault mounts directories `/srv`, `/tmp`, `/var/log`, `/var/spool`

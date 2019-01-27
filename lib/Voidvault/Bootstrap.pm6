@@ -496,9 +496,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # root (C</>) sized at 12% of total size of vg
-    my Str:D $extents = '12%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # root (C</>) sized at 7G
+    my Str:D $size = '7G';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -507,9 +507,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # boot (C</boot>) sized at 2% of total size of vg
-    my Str:D $extents = '2%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # boot (C</boot>) sized at 700M
+    my Str:D $size = '700M';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -518,9 +518,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # opt (C</opt>) sized at 1% of total size of vg
-    my Str:D $extents = '1%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # opt (C</opt>) sized at 100M
+    my Str:D $size = '100M';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -529,9 +529,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # srv (C</srv>) sized at 5% of total size of vg
-    my Str:D $extents = '5%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # srv (C</srv>) sized at 200M
+    my Str:D $size = '200M';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -540,9 +540,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var (C</var>) sized at 5% of total size of vg
-    my Str:D $extents = '5%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # var (C</var>) sized at 1G
+    my Str:D $size = '1G';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -551,9 +551,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-cache-xbps (C</var/cache/xbps>) sized at 5% of total size of vg
-    my Str:D $extents = '5%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # var-cache-xbps (C</var/cache/xbps>) sized at 2G
+    my Str:D $size = '2G';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -562,9 +562,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-log (C</var/log>) sized at 1% of total size of vg
-    my Str:D $extents = '1%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # var-log (C</var/log>) sized at 100M
+    my Str:D $size = '100M';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -573,9 +573,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-opt (C</var/opt>) sized at 1% of total size of vg
-    my Str:D $extents = '1%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # var-opt (C</var/opt>) sized at 50M
+    my Str:D $size = '50M';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -584,9 +584,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-spool (C</var/spool>) sized at 1% of total size of vg
-    my Str:D $extents = '1%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # var-spool (C</var/spool>) sized at 50M
+    my Str:D $size = '50M';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -595,9 +595,9 @@ multi sub lvcreate(
     --> Nil
 )
 {
-    # var-tmp (C</var/tmp>) sized at 2% of total size of vg
-    my Str:D $extents = '2%VG';
-    lvcreate($lv, $extents, $pool-name);
+    # var-tmp (C</var/tmp>) sized at 800M
+    my Str:D $size = '800M';
+    lvcreate($lv, :$size, $pool-name);
 }
 
 multi sub lvcreate(
@@ -608,17 +608,27 @@ multi sub lvcreate(
 {
     # home (C</home>) sized at 100% of remaining free space in vg
     my Str:D $extents = '100%FREE';
-    lvcreate($lv, $extents, $pool-name);
+    lvcreate($lv, :$extents, $pool-name);
 }
 
 multi sub lvcreate(
     Str:D $name,
-    Str:D $extents,
-    PoolName:D $pool-name
+    PoolName:D $pool-name,
+    Str:D :$extents! where .so
     --> Nil
 )
 {
     run(qqw<lvcreate --name $name --extents $extents $pool-name>);
+}
+
+multi sub lvcreate(
+    Str:D $name,
+    PoolName:D $pool-name,
+    Str:D :$size! where .so
+    --> Nil
+)
+{
+    run(qqw<lvcreate --name $name --size $size $pool-name>);
 }
 
 multi sub mknilfs(Str:D @lv, PoolName:D $pool-name --> Nil)
